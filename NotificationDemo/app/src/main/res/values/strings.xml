@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Notification Demo</string>
+    
+    <string name="standard">Standard</string>
+    <string name="expanded">Expanded</string>
+
+</resources>
