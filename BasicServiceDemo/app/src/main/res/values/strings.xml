@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="app_name">Basic Service Demo</string>
-    
-    <string name="run_service">Run Service</string>
-    <string name="stop_service">Stop Service</string>
-
-</resources>

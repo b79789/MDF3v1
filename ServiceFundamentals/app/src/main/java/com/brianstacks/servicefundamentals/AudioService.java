@@ -31,6 +31,8 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     String title;
     String artist;
     NotificationManager mManager;
+    AudioService audioService;
+    private int currentTrack = 0;
 
 
 
@@ -59,12 +61,15 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
             final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
             final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+            final String [ ] tracks = {uri1,uri2,uri3,uri4};
+
             Intent mainIntent = new Intent(this, MainActivity.class);
             mainIntent.setAction(Intent.ACTION_MAIN);
             mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
             try {
-                mPlayer.setDataSource(getApplicationContext(), Uri.parse(uri1));
+                Uri file = Uri.parse(tracks[this.currentTrack]);
+                mPlayer.setDataSource(getApplicationContext(), file);
                 mPlayer.prepareAsync();
                 id = 1;
                 mPlayer.setOnPreparedListener(this);
@@ -79,10 +84,12 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
+                    currentTrack = (currentTrack + 1) % tracks.length;
+                     Uri nextTrack = Uri.parse(tracks[currentTrack]);
 
                     mp.reset();
                     try {
-                        mp.setDataSource(getApplicationContext(), Uri.parse(uri2));
+                        mp.setDataSource(getApplicationContext(), nextTrack);
                         id = 2;
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -91,9 +98,11 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
                     mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
+                            currentTrack = (currentTrack + 2) % tracks.length;
+                             Uri nextTrack2 = Uri.parse(tracks[currentTrack]);
                             mp.reset();
                             try {
-                                mp.setDataSource(getApplicationContext(), Uri.parse(uri3));
+                                mp.setDataSource(getApplicationContext(), nextTrack2);
                                 id = 3;
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -102,9 +111,11 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
                             mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mp) {
+                                    currentTrack = (currentTrack + 3) % tracks.length;
+                                     Uri nextTrack3 = Uri.parse(tracks[currentTrack]);
                                     mp.reset();
                                     try {
-                                        mp.setDataSource(getApplicationContext(), Uri.parse(uri4));
+                                        mp.setDataSource(getApplicationContext(), nextTrack3);
                                         id = 4;
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -116,6 +127,8 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
                                             mp.stop();
                                             mp.reset();
                                             mp.release();
+                                            onStartCommand(intent,0,0);
+
                                         }
                                     });
                                 }
@@ -159,7 +172,12 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
 
 
 
+    @Override
     public void onDestroy(){
+        super.onDestroy();
+        if (audioService != null) {
+            unbindService((android.content.ServiceConnection) audioService);
+        }
         mPlayer.release();
         stopForeground(true);
     }
@@ -185,12 +203,22 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void onSkipForward(){
-        mPlayer.seekTo(mPlayer.getCurrentPosition()+30000);
+        mPlayer.reset();
+        mPlayer.start();
     }
 
     public void onSkipback(){
-        mPlayer.seekTo(mPlayer.getCurrentPosition()-30000);
+        mPlayer.seekTo(currentTrack-1);
     }
+
+    public void randomPlay(){
+
+    }
+
+    public void loopPlay(){
+        mPlayer.isLooping();
+    }
+
 
 
     @Override
