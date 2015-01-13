@@ -14,6 +14,9 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.RadioButton;
+
 import java.io.IOException;
 
 /**
@@ -56,12 +59,51 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     public int onStartCommand(final Intent intent, int flags, int startId){
         mManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         mPlayer = new MediaPlayer();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
         if(intent != null) {
             final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
             final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
             final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
             final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
             final String [ ] tracks = {uri1,uri2,uri3,uri4};
+            Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
+
+
+
+
+            artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            if (id == 1) {
+                metaRetriever.setDataSource(this, Uri.parse(uri1));
+            } else if (id == 2) {
+                metaRetriever.setDataSource(this, Uri.parse(uri2));
+            } else if (id == 3) {
+                metaRetriever.setDataSource(this, Uri.parse(uri3));
+            } else if (id == 4) {
+                metaRetriever.setDataSource(this, Uri.parse(uri4));
+            }
+            Song song1=new Song();
+            song1.setmArtist("Bob Seger and the Silver Bullet Band");
+            song1.setmTitle("Her Strut");
+            song1.setmUri(uri1);
+            song1.setmArt(imageIDs[0]);
+            Song song2=new Song();
+            song2.setmArtist("Bob Seger and the Silver Bullet Band");
+            song2.setmTitle("Turn the Page");
+            song2.setmUri(uri2);
+            song2.setmArt(imageIDs[1]);
+            Song song3=new Song();
+            song3.setmArtist("Bob Seger and the Silver Bullet Band");
+            song3.setmTitle("Old-Time Rock-N-Roll");
+            song3.setmUri(uri3);
+            song3.setmArt(imageIDs[2]);
+            Song song4=new Song();
+            song4.setmArtist("Bob Seger and the Silver Bullet Band");
+            song4.setmTitle("Like a Rock");
+            song4.setmUri(uri4);
+            song4.setmArt(imageIDs[3]);
+            Log.v("Song1",song3.getmArtist()+" "+song3.getmTitle());
 
             Intent mainIntent = new Intent(this, MainActivity.class);
             mainIntent.setAction(Intent.ACTION_MAIN);
@@ -138,24 +180,9 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
                 }
 
             });
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-            if (id == 1) {
-                metaRetriever.setDataSource(this, Uri.parse(uri1));
-            } else if (id == 2) {
-                metaRetriever.setDataSource(this, Uri.parse(uri2));
-            } else if (id == 3) {
-                metaRetriever.setDataSource(this, Uri.parse(uri3));
-            } else if (id == 4) {
-                metaRetriever.setDataSource(this, Uri.parse(uri4));
-            }
 
-            artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            Intent myIntent = new Intent();
-            myIntent.putExtra("artist", artist);
-            myIntent.putExtra("title", title);
-            myIntent.setAction("com.android.activity.SEND_DATA");
+
+
             getApplicationContext().sendBroadcast(intent);
             builder.setContentIntent(pendingIntent);
             builder.setSmallIcon(R.drawable.heavens_small);
@@ -211,12 +238,13 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.seekTo(currentTrack-1);
     }
 
-    public void randomPlay(){
+    public void randomPlay(View view){
 
     }
 
-    public void loopPlay(){
+    public void loopPlay(View view){
         mPlayer.isLooping();
+
     }
 
 

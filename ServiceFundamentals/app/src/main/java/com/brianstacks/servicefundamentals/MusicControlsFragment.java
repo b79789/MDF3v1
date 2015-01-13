@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -37,12 +38,9 @@ import java.io.IOException;
  * create an instance of this fragment.
  */
 public class MusicControlsFragment extends Fragment implements ServiceConnection {
-    public static final String TAG = "DetailFrag.TAG";
+    public static final String TAG = "MusicControlsFragment.TAG";
     TextView tv;
     private AudioService audioSrv;
-
-
-
 
     private OnFragmentInteractionListener mListener;
 
@@ -117,6 +115,9 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
         Button skipForwardB = (Button)getActivity().findViewById(R.id.skipForward);
         Button skipBackB = (Button)getActivity().findViewById(R.id.skipBack);
         Button exitButton = (Button)getActivity().findViewById(R.id.exitApp);
+        RadioButton loopButton = (RadioButton) getActivity().findViewById(R.id.loopButton);
+        RadioButton randomButton = (RadioButton)getActivity().findViewById(R.id.randButton);
+
         AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
         //get service
         audioSrv = binder.getService();
@@ -177,6 +178,26 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
                 getActivity().stopService(objIntent);
                 getActivity().finish();
                 System.exit(0);
+            }
+        });
+        loopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Is the button now checked?
+                RadioButton bchecked = (RadioButton)getActivity().findViewById(R.id.loopButton);
+                        if (bchecked.isChecked()){
+                            audioSrv.mPlayer.isLooping();
+                        }else {
+                            audioSrv.mPlayer.isPlaying();
+                        }
+
+                }
+
+        });
+        randomButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                audioSrv.randomPlay(getView());
             }
         });
     }

@@ -8,7 +8,7 @@
 
     <LinearLayout
         android:orientation="vertical"
-        android:id="@+id/fragment_container2"
+        android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="fill_parent"
         android:layout_weight="1"/>
