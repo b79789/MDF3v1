@@ -37,11 +37,11 @@ import java.io.IOException;
  * Use the {@link MusicControlsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MusicControlsFragment extends Fragment implements ServiceConnection {
+public class MusicControlsFragment extends Fragment {
     public static final String TAG = "MusicControlsFragment.TAG";
     TextView tv;
     private AudioService audioSrv;
-
+    boolean mBound = false;
     private OnFragmentInteractionListener mListener;
 
 
@@ -60,6 +60,7 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setRetainInstance(true);
     }
 
     @Override
@@ -71,42 +72,6 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
     @Override
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
-        // created an intent object that goes to the audio service class
-        Intent objIntent = new Intent(getActivity(), AudioService.class);
-        // started the service
-        getActivity().startService(objIntent);
-        getActivity().bindService(objIntent, this, Context.BIND_AUTO_CREATE);
-    }
-
-
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        Intent objIntent = new Intent(getActivity(), AudioService.class);
-
-        getActivity().unbindService((ServiceConnection) objIntent);
-
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-
-        Intent objIntent = new Intent(getActivity(), AudioService.class);
-
-        getActivity().bindService(objIntent, this, Context.BIND_AUTO_CREATE);
 
         tv = (TextView)getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button)getActivity().findViewById(R.id.pauseButton);
@@ -117,10 +82,6 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
         Button exitButton = (Button)getActivity().findViewById(R.id.exitApp);
         RadioButton loopButton = (RadioButton) getActivity().findViewById(R.id.loopButton);
         RadioButton randomButton = (RadioButton)getActivity().findViewById(R.id.randButton);
-
-        AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
-        //get service
-        audioSrv = binder.getService();
         LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(mMessageReceiver,
                 new IntentFilter("com.android.activity.SEND_DATA"));
         final String uri1 = "android.resource://" + getActivity().getPackageName() + "/" + R.raw.herstrut;
@@ -153,9 +114,6 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
-                getActivity().stopService(objIntent);
-
             }
         });
         skipForwardB.setOnClickListener(new View.OnClickListener() {
@@ -180,32 +138,67 @@ public class MusicControlsFragment extends Fragment implements ServiceConnection
                 System.exit(0);
             }
         });
-        loopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Is the button now checked?
-                RadioButton bchecked = (RadioButton)getActivity().findViewById(R.id.loopButton);
-                        if (bchecked.isChecked()){
-                            audioSrv.mPlayer.isLooping();
-                        }else {
-                            audioSrv.mPlayer.isPlaying();
-                        }
 
-                }
 
-        });
-        randomButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                audioSrv.randomPlay(getView());
-            }
-        });
+
     }
 
     @Override
-    public void onServiceDisconnected(ComponentName name) {
-        getActivity().unbindService(this);
+    public void onStart() {
+        super.onStart();
+        if (audioSrv ==null){
+            // created an intent object that goes to the audio service class
+            Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
+            // mContext is defined upper in code, I think it is not necessary to explain what is it
+            getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
+            getActivity().getApplicationContext().startService(objIntent);
+        }
+
     }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        getActivity().getApplicationContext().unbindService(mConnection);
+        getActivity().getApplicationContext().stopService(new Intent(getActivity().getApplicationContext(), AudioService.class));
+
+
+    }
+
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (OnFragmentInteractionListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+            AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
+            //get service
+            audioSrv = binder.getService();
+            mBound=true;
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+            audioSrv=null;
+            mBound=false;
+        }
+    };
+
+
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override

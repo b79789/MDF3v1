@@ -11,39 +11,34 @@ package com.brianstacks.servicefundamentals;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
 public class MainActivity extends ActionBarActivity implements MusicControlsFragment.OnFragmentInteractionListener{
 
-    private AudioService audioSrv;
-    TextView tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         FragmentManager mgr = getFragmentManager();
+        MusicControlsFragment musicControlsFragment = (MusicControlsFragment) mgr.findFragmentByTag(MusicControlsFragment.TAG);
         FragmentTransaction trans = mgr.beginTransaction();
-        MusicControlsFragment musicControlsFragment =  MusicControlsFragment.newInstance();
-        trans.replace(R.id.fragment_container, musicControlsFragment, MusicControlsFragment.TAG);
-        trans.commit();
-
-    }
-
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        // Checks the orientation of the screen
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+        if (musicControlsFragment == null){
+            MusicControlsFragment fragment = new MusicControlsFragment();
+            trans.add(R.id.fragment_container, fragment);
+            trans.commit();
         }
+
+
     }
+
+
 
     @Override
     public void onFragmentInteraction() {

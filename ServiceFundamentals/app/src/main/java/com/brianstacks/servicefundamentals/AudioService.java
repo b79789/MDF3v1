@@ -47,7 +47,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public boolean onUnbind(Intent intent) {
         mPlayer.release();
-        return super.onUnbind(intent);
+        return false;
     }
 
     public void onCreate(){
@@ -193,7 +193,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             builder.setOngoing(true);
             startForeground(NOTIFICATION_ID, builder.build());
         }
-        return 1;
+        return START_STICKY;
     }
 
 
@@ -202,9 +202,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if (audioService != null) {
-            unbindService((android.content.ServiceConnection) audioService);
-        }
+
         mPlayer.release();
         stopForeground(true);
     }
