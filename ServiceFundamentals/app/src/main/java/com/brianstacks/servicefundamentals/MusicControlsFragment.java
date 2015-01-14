@@ -23,8 +23,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import java.io.IOException;
 
@@ -80,8 +82,8 @@ public class MusicControlsFragment extends Fragment {
         Button skipForwardB = (Button)getActivity().findViewById(R.id.skipForward);
         Button skipBackB = (Button)getActivity().findViewById(R.id.skipBack);
         Button exitButton = (Button)getActivity().findViewById(R.id.exitApp);
-        RadioButton loopButton = (RadioButton) getActivity().findViewById(R.id.loopButton);
-        RadioButton randomButton = (RadioButton)getActivity().findViewById(R.id.randButton);
+        final ToggleButton loopButton = (ToggleButton) getActivity().findViewById(R.id.loopButton);
+        ToggleButton randomButton = (ToggleButton)getActivity().findViewById(R.id.randButton);
         LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(mMessageReceiver,
                 new IntentFilter("com.android.activity.SEND_DATA"));
         final String uri1 = "android.resource://" + getActivity().getPackageName() + "/" + R.raw.herstrut;
@@ -93,10 +95,36 @@ public class MusicControlsFragment extends Fragment {
         tv.setAllCaps(true);
         tv.setTextColor(Color.GREEN);
         tv.setTypeface(null, Typeface.BOLD);
+        loopButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            //Boolean loopGoing = audioSrv.mPlayer.isLooping();
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+
+                    //loopGoing=true;
+                } else {
+
+                    // The toggle is disabled
+                    //loopGoing=false;
+                }
+
+            }
+        });
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                audioSrv.onPlay();
+                if (audioSrv ==null){
+                    // created an intent object that goes to the audio service class
+                    Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
+                    // mContext is defined upper in code, I think it is not necessary to explain what is it
+                    getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
+                    getActivity().getApplicationContext().startService(objIntent);
+
+                }else {
+                    audioSrv.onPlay();
+                }
+
             }
         });
         pauseButton.setOnClickListener(new View.OnClickListener() {
@@ -143,25 +171,16 @@ public class MusicControlsFragment extends Fragment {
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (audioSrv ==null){
-            // created an intent object that goes to the audio service class
-            Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
-            // mContext is defined upper in code, I think it is not necessary to explain what is it
-            getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
-            getActivity().getApplicationContext().startService(objIntent);
-        }
 
-    }
 
 
     @Override
     public void onStop() {
         super.onStop();
-        getActivity().getApplicationContext().unbindService(mConnection);
-        getActivity().getApplicationContext().stopService(new Intent(getActivity().getApplicationContext(), AudioService.class));
+        if (mBound ){
+            getActivity().getApplicationContext().unbindService(mConnection);
+
+        }
 
 
     }

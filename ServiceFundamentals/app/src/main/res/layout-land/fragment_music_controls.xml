@@ -52,6 +52,20 @@
             android:text="Close App"/>
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <ToggleButton
+            android:id="@+id/loopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loop"/>
+        <ToggleButton
+            android:id="@+id/randButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Random"/>
+    </LinearLayout>
     <TextView
         android:id="@+id/trackText"
         android:layout_width="fill_parent"

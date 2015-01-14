@@ -53,12 +53,12 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
-        <RadioButton
+        <ToggleButton
             android:id="@+id/loopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Loop"/>
-        <RadioButton
+        <ToggleButton
             android:id="@+id/randButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

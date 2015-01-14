@@ -46,7 +46,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public boolean onUnbind(Intent intent) {
-        mPlayer.release();
+
         return false;
     }
 
@@ -223,7 +223,6 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.start();
     }
     public void onStop() throws IOException {
-
             mPlayer.reset();
     }
 
