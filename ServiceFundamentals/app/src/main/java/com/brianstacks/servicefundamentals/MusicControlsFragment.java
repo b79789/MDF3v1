@@ -26,6 +26,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ import java.io.IOException;
 public class MusicControlsFragment extends Fragment {
     public static final String TAG = "MusicControlsFragment.TAG";
     TextView tv;
-    private AudioService audioSrv;
+    AudioService audioSrv;
     boolean mBound = false;
     private OnFragmentInteractionListener mListener;
 
@@ -75,6 +76,7 @@ public class MusicControlsFragment extends Fragment {
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
 
+
         tv = (TextView)getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button)getActivity().findViewById(R.id.pauseButton);
         Button playButton = (Button)getActivity().findViewById(R.id.playButton);
@@ -101,13 +103,11 @@ public class MusicControlsFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // The toggle is enabled
-
-                    //loopGoing=true;
+                    audioSrv.mPlayer.setLooping(true);
                 } else {
 
                     // The toggle is disabled
-                    //loopGoing=false;
-                }
+                    audioSrv.mPlayer.setLooping(false);                }
 
             }
         });
@@ -115,6 +115,7 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (audioSrv ==null){
+
                     // created an intent object that goes to the audio service class
                     Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
                     // mContext is defined upper in code, I think it is not necessary to explain what is it
@@ -130,6 +131,9 @@ public class MusicControlsFragment extends Fragment {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (audioSrv == null){
+                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
+                }else
                 audioSrv.onPause();
             }
         });
@@ -137,6 +141,9 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 try {
+                    if (audioSrv == null){
+                        Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
+                    }else
                     audioSrv.onStop();
 
                 } catch (IOException e) {
@@ -148,12 +155,18 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
+                if (audioSrv == null){
+                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
+                }else
                 audioSrv.onSkipForward();
             }
         });
         skipBackB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (audioSrv == null){
+                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
+                }else
                 audioSrv.onSkipback();
             }
         });
@@ -171,15 +184,18 @@ public class MusicControlsFragment extends Fragment {
 
     }
 
+    @Override
+    public void onPause(){
+        super.onPause();
 
+        getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
 
-
+    }
     @Override
     public void onStop() {
         super.onStop();
         if (mBound ){
-            getActivity().getApplicationContext().unbindService(mConnection);
-
+            mBound=false;
         }
 
 
