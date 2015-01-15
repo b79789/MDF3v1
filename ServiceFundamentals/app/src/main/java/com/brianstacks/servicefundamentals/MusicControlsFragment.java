@@ -75,8 +75,6 @@ public class MusicControlsFragment extends Fragment {
     @Override
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
-
-
         tv = (TextView)getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button)getActivity().findViewById(R.id.pauseButton);
         Button playButton = (Button)getActivity().findViewById(R.id.playButton);
@@ -102,13 +100,35 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+
                     // The toggle is enabled
-                    audioSrv.mPlayer.setLooping(true);
+                    audioSrv.loopPlayTrue();
+
+                    Toast.makeText(getActivity().getApplicationContext(), "Looping On", Toast.LENGTH_SHORT).show();
                 } else {
 
                     // The toggle is disabled
-                    audioSrv.mPlayer.setLooping(false);                }
+                    audioSrv.loopPlayFalse();
+                    Toast.makeText(getActivity().getApplicationContext(), "Looping Off", Toast.LENGTH_SHORT).show();
+                }
 
+            }
+        });
+        randomButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+
+                    // The toggle is enabled
+                    audioSrv.randomPlay();
+
+                    Toast.makeText(getActivity().getApplicationContext(), "Shuffle On", Toast.LENGTH_SHORT).show();
+                } else {
+
+                    // The toggle is disabled
+                    audioSrv.onPlay();
+                    Toast.makeText(getActivity().getApplicationContext(), "Shuffle Off", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         playButton.setOnClickListener(new View.OnClickListener() {

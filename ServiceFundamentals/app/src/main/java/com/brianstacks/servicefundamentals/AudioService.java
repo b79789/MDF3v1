@@ -223,7 +223,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.start();
     }
     public void onStop() throws IOException {
-            mPlayer.reset();
+            mPlayer.stop();
     }
 
     public void onSkipForward(){
@@ -235,14 +235,33 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.seekTo(currentTrack-1);
     }
 
-    public void randomPlay(View view){
+    public int getRandomNumber(int numberOfElements) {
+        java.util.Random rnd = new java.util.Random();
+        return rnd.nextInt(numberOfElements);
+    }
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    public void randomPlay(){
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String [ ] tracks = {uri1,uri2,uri3,uri4};
+
+        mPlayer.selectTrack(getRandomNumber(tracks.length));
+
 
     }
 
-    public void loopPlay(View view){
-        mPlayer.isLooping();
+    public void loopPlayTrue(){
+        mPlayer.setLooping(true);
 
     }
+
+    public void loopPlayFalse(){
+        mPlayer.setLooping(false);
+
+    }
+
 
 
 
