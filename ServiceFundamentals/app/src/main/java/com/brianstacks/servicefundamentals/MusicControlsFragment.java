@@ -1,6 +1,6 @@
 package com.brianstacks.servicefundamentals;
 
-import android.annotation.TargetApi;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -12,19 +12,16 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -33,12 +30,9 @@ import java.io.IOException;
 
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link MusicControlsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link MusicControlsFragment#newInstance} factory method to
- * create an instance of this fragment.
+    Brian Stacks
+    Fullsail.edu
+    1-11-15
  */
 public class MusicControlsFragment extends Fragment {
     public static final String TAG = "MusicControlsFragment.TAG";
@@ -59,6 +53,25 @@ public class MusicControlsFragment extends Fragment {
         // Required empty public constructor
     }
 
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+            final AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
+            //get service
+            audioSrv = binder.getService();
+            mBound = true;
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+            audioSrv = null;
+            mBound = false;
+        }
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,24 +85,25 @@ public class MusicControlsFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_music_controls, container, false);
     }
+
     @Override
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
-        tv = (TextView)getActivity().findViewById(R.id.trackText);
-        Button pauseButton = (Button)getActivity().findViewById(R.id.pauseButton);
-        Button playButton = (Button)getActivity().findViewById(R.id.playButton);
-        Button stopButton = (Button)getActivity().findViewById(R.id.stopButton);
-        Button skipForwardB = (Button)getActivity().findViewById(R.id.skipForward);
-        Button skipBackB = (Button)getActivity().findViewById(R.id.skipBack);
-        Button exitButton = (Button)getActivity().findViewById(R.id.exitApp);
+        tv = (TextView) getActivity().findViewById(R.id.trackText);
+        Button pauseButton = (Button) getActivity().findViewById(R.id.pauseButton);
+        Button playButton = (Button) getActivity().findViewById(R.id.playButton);
+        Button stopButton = (Button) getActivity().findViewById(R.id.stopButton);
+        Button skipForwardB = (Button) getActivity().findViewById(R.id.skipForward);
+        Button skipBackB = (Button) getActivity().findViewById(R.id.skipBack);
+        Button exitButton = (Button) getActivity().findViewById(R.id.exitApp);
         final ToggleButton loopButton = (ToggleButton) getActivity().findViewById(R.id.loopButton);
-        ToggleButton randomButton = (ToggleButton)getActivity().findViewById(R.id.randButton);
+        ToggleButton randomButton = (ToggleButton) getActivity().findViewById(R.id.randButton);
         LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(mMessageReceiver,
                 new IntentFilter("com.android.activity.SEND_DATA"));
         final String uri1 = "android.resource://" + getActivity().getPackageName() + "/" + R.raw.herstrut;
         MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
         metaRetriever.setDataSource(this.getActivity(), Uri.parse(uri1));
-        String artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        String artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
         String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         tv.setText("Artist :" + artist + System.getProperty("line.separator") + "Title: " + title);
         tv.setAllCaps(true);
@@ -100,16 +114,17 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-
-                    // The toggle is enabled
-                    audioSrv.loopPlayTrue();
-
-                    Toast.makeText(getActivity().getApplicationContext(), "Looping On", Toast.LENGTH_SHORT).show();
+                    if (audioSrv != null) {
+                        // The toggle is enabled
+                        audioSrv.loopPlayTrue();
+                    } else
+                        Toast.makeText(getActivity().getApplicationContext(), "Media Player is null.", Toast.LENGTH_SHORT).show();
                 } else {
-
-                    // The toggle is disabled
-                    audioSrv.loopPlayFalse();
-                    Toast.makeText(getActivity().getApplicationContext(), "Looping Off", Toast.LENGTH_SHORT).show();
+                    if (audioSrv != null) {
+                        // The toggle is disabled
+                        audioSrv.loopPlayFalse();
+                    } else
+                        Toast.makeText(getActivity().getApplicationContext(), "Media Player is null.", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -132,17 +147,18 @@ public class MusicControlsFragment extends Fragment {
             }
         });
         playButton.setOnClickListener(new View.OnClickListener() {
+            // created an intent object that goes to the audio service class
+            Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
+
             @Override
             public void onClick(View v) {
-                if (audioSrv ==null){
+                if (audioSrv == null) {
 
-                    // created an intent object that goes to the audio service class
-                    Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
                     // mContext is defined upper in code, I think it is not necessary to explain what is it
                     getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
                     getActivity().getApplicationContext().startService(objIntent);
 
-                }else {
+                } else {
                     audioSrv.onPlay();
                 }
 
@@ -151,20 +167,20 @@ public class MusicControlsFragment extends Fragment {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (audioSrv == null){
-                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
-                }else
-                audioSrv.onPause();
+                if (audioSrv == null) {
+                    Toast.makeText(getActivity().getApplicationContext(), "Player is null", Toast.LENGTH_SHORT).show();
+                } else
+                    audioSrv.onPause();
             }
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    if (audioSrv == null){
-                        Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
-                    }else
-                    audioSrv.onStop();
+                    if (audioSrv == null) {
+                        Toast.makeText(getActivity().getApplicationContext(), "Player is null", Toast.LENGTH_SHORT).show();
+                    } else
+                        audioSrv.onStop();
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -175,19 +191,19 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                if (audioSrv == null){
-                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
-                }else
-                audioSrv.onSkipForward();
+                if (audioSrv == null) {
+                    Toast.makeText(getActivity().getApplicationContext(), "Player is null", Toast.LENGTH_SHORT).show();
+                } else
+                    audioSrv.onSkipForward();
             }
         });
         skipBackB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (audioSrv == null){
-                    Toast.makeText(getActivity().getApplicationContext(),"Player is null",Toast.LENGTH_SHORT).show();
-                }else
-                audioSrv.onSkipback();
+                if (audioSrv == null) {
+                    Toast.makeText(getActivity().getApplicationContext(), "Player is null", Toast.LENGTH_SHORT).show();
+                } else
+                    audioSrv.onSkipback();
             }
         });
         exitButton.setOnClickListener(new View.OnClickListener() {
@@ -201,26 +217,25 @@ public class MusicControlsFragment extends Fragment {
         });
 
 
-
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
         super.onPause();
 
-        getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
+        //getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
 
     }
+
     @Override
     public void onStop() {
         super.onStop();
-        if (mBound ){
-            mBound=false;
+        if (mBound) {
+            mBound = false;
         }
 
 
     }
-
 
     @Override
     public void onAttach(Activity activity) {
@@ -232,28 +247,6 @@ public class MusicControlsFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
     }
-
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-
-            AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
-            //get service
-            audioSrv = binder.getService();
-            mBound=true;
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-            audioSrv=null;
-            mBound=false;
-        }
-    };
-
-
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override

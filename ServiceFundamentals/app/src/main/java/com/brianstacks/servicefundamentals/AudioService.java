@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -53,12 +54,13 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     public void onCreate(){
         super.onCreate();
         Log.d(LOGCAT, "Service Started!");
+        mManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        mPlayer = new MediaPlayer();
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(final Intent intent, int flags, int startId){
-        mManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        mPlayer = new MediaPlayer();
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
         if(intent != null) {
@@ -68,13 +70,15 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
             final String [ ] tracks = {uri1,uri2,uri3,uri4};
             Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
-
+            metaRetriever.setDataSource(this, Uri.parse(uri1));
 
 
 
             artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            if (id == 1) {
+
+
+          /*  if (id == 1) {
                 metaRetriever.setDataSource(this, Uri.parse(uri1));
             } else if (id == 2) {
                 metaRetriever.setDataSource(this, Uri.parse(uri2));
@@ -82,7 +86,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
                 metaRetriever.setDataSource(this, Uri.parse(uri3));
             } else if (id == 4) {
                 metaRetriever.setDataSource(this, Uri.parse(uri4));
-            }
+            }*/
             Song song1=new Song();
             song1.setmArtist("Bob Seger and the Silver Bullet Band");
             song1.setmTitle("Her Strut");
@@ -189,6 +193,14 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.heavens));
             builder.setContentTitle(artist);
             builder.setContentText(title);
+            NotificationCompat.BigPictureStyle bigStyle = new NotificationCompat.BigPictureStyle();
+            bigStyle.setSummaryText("This expanded notification is brought to you by StacksMobile");
+            bigStyle.setBigContentTitle(artist);
+            bigStyle.setSummaryText(title);
+            Bitmap bigPic = BitmapFactory.decodeResource(getResources(), R.drawable.bs);
+
+            bigStyle.bigPicture(bigPic);
+            builder.setStyle(bigStyle);
             builder.setAutoCancel(false);
             builder.setOngoing(true);
             startForeground(NOTIFICATION_ID, builder.build());
@@ -227,7 +239,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void onSkipForward(){
-        mPlayer.reset();
+        mPlayer.stop();
         mPlayer.start();
     }
 
@@ -253,6 +265,7 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void loopPlayTrue(){
+        mPlayer.start();
         mPlayer.setLooping(true);
 
     }
