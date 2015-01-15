@@ -124,9 +124,6 @@ public class AudioService extends Service implements MediaPlayer.OnPreparedListe
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (!mPlayer.isLooping()) {
-                Log.d(LOGCAT, "Problem in Playing Audio");
-            }
             mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {

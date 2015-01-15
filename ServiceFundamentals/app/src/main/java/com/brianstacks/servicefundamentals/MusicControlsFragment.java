@@ -57,7 +57,7 @@ public class MusicControlsFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
 
-            final AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
+            AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
             //get service
             audioSrv = binder.getService();
             mBound = true;
