@@ -55,37 +55,53 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         Log.d(LOGCAT, "Service Started!");
         mManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+        int notifyID = 1;
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String[] tracks = {uri1, uri2, uri3, uri4};
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+        //metaRetriever.setDataSource(uri1);
+        String artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         Intent mainIntent = new Intent(this, MainActivity.class);
         mainIntent.setAction(Intent.ACTION_MAIN);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
         //getApplicationContext().sendBroadcast(intent);
+        int numMessages = 0;
         builder.setContentIntent(pendingIntent);
         builder.setSmallIcon(R.drawable.heavens_small);
         builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.heavens));
         builder.setContentTitle(artist);
         builder.setContentText(title);
+        builder.setNumber(++numMessages);
         NotificationCompat.BigPictureStyle bigStyle = new NotificationCompat.BigPictureStyle();
         bigStyle.setSummaryText("This expanded notification is brought to you by StacksMobile");
         bigStyle.setBigContentTitle(artist);
         bigStyle.setSummaryText(title);
         Bitmap bigPic = BitmapFactory.decodeResource(getResources(), R.drawable.bs);
-
         bigStyle.bigPicture(bigPic);
         builder.setStyle(bigStyle);
         builder.setAutoCancel(false);
         builder.setOngoing(true);
-
         startForeground(NOTIFICATION_ID, builder.build());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mPlayer.release();
+        stopForeground(true);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(final Intent intent, int flags, int startId) {
 
         mPlayer = new MediaPlayer();
-        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-
         if (intent != null) {
             final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
             final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
@@ -93,18 +109,6 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
             final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
             final String[] tracks = {uri1, uri2, uri3, uri4};
             Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
-            metaRetriever.setDataSource(this, Uri.parse(uri1));
-            artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-          /*  if (id == 1) {
-                metaRetriever.setDataSource(this, Uri.parse(uri1));
-            } else if (id == 2) {
-                metaRetriever.setDataSource(this, Uri.parse(uri2));
-            } else if (id == 3) {
-                metaRetriever.setDataSource(this, Uri.parse(uri3));
-            } else if (id == 4) {
-                metaRetriever.setDataSource(this, Uri.parse(uri4));
-            }*/
             Song song1 = new Song();
             song1.setmArtist("Bob Seger and the Silver Bullet Band");
             song1.setmTitle("Her Strut");
@@ -136,78 +140,58 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-           /* mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    currentTrack = (currentTrack + 1) % tracks.length;
-                    Uri nextTrack = Uri.parse(tracks[currentTrack]);
-
-                    mp.reset();
-                    try {
-                        mp.setDataSource(getApplicationContext(), nextTrack);
-                        id = 2;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    mp.prepareAsync();
-                    mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mp) {
-                            currentTrack = (currentTrack + 2) % tracks.length;
-                            Uri nextTrack2 = Uri.parse(tracks[currentTrack]);
-                            mp.reset();
-                            try {
-                                mp.setDataSource(getApplicationContext(), nextTrack2);
-                                id = 3;
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            mp.prepareAsync();
-                            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mp) {
-                                    currentTrack = (currentTrack + 3) % tracks.length;
-                                    Uri nextTrack3 = Uri.parse(tracks[currentTrack]);
-                                    mp.reset();
-                                    try {
-                                        mp.setDataSource(getApplicationContext(), nextTrack3);
-                                        id = 4;
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                    mp.prepareAsync();
-                                    mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                        @Override
-                                        public void onCompletion(MediaPlayer mp) {
-                                            mp.stop();
-                                            mp.reset();
-                                            mp.release();
-                                            onStartCommand(intent, 0, 0);
-
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-
-            });*/
-
-
         }
         return START_STICKY;
     }
 
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String[] tracks = {uri1, uri2, uri3, uri4};
+        currentTrack = (currentTrack + 1) % tracks.length;
+        if (currentTrack>0) {
+            Uri nextTrack = Uri.parse(tracks[currentTrack]);
+            mp.reset();
+            try {
+                mp.setDataSource(getApplicationContext(), nextTrack);
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mp.prepareAsync();
+        }else {
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(),Uri.parse(tracks[0]));
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
+    }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onPrepared(MediaPlayer mp) {
 
-        mPlayer.release();
-        stopForeground(true);
+        mp.start();
     }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        return false;
+    }
+    public class AudioServiceBinder extends Binder {
+        public AudioService getService() {
+            return AudioService.this;
+        }
+    }
+
+
+
 
     public void onPause() {
         mPlayer.pause();
@@ -226,8 +210,36 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         mPlayer.start();
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public void onSkipback() {
-        mPlayer.seekTo(currentTrack - 1);
+
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String[] tracks = {uri1, uri2, uri3, uri4};
+        currentTrack = (currentTrack - 1) % tracks.length;
+        if (currentTrack>0){
+            Uri nextTrack = Uri.parse(tracks[currentTrack]);
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(), nextTrack);
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }else {
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(),Uri.parse(tracks[0]));
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
+
     }
 
     public int getRandomNumber(int numberOfElements) {
@@ -242,14 +254,30 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
         final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
         final String[] tracks = {uri1, uri2, uri3, uri4};
-
-        mPlayer.selectTrack(getRandomNumber(tracks.length));
-
-
+        currentTrack = (currentTrack + 1) % tracks.length;
+        if (currentTrack>0){
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(), Uri.parse(tracks[getRandomNumber(tracks.length)]));
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }else {
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(),Uri.parse(tracks[getRandomNumber(tracks.length)]));
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
     }
 
     public void loopPlayTrue() {
-        mPlayer.start();
+        
         mPlayer.setLooping(true);
 
     }
@@ -259,48 +287,5 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
 
     }
 
-
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        return false;
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-
-        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
-        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
-        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
-        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
-        final String[] tracks = {uri1, uri2, uri3, uri4};
-        Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
-        metaRetriever.setDataSource(this, Uri.parse(uri1));
-        artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-        currentTrack = (currentTrack + 1) % tracks.length;
-        Uri nextTrack = Uri.parse(tracks[currentTrack]);
-
-        mp.reset();
-        try {
-            mp.setDataSource(getApplicationContext(), nextTrack);
-            id = 2;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mp.prepareAsync();
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-
-        mp.start();
-    }
-
-    public class AudioServiceBinder extends Binder {
-        public AudioService getService() {
-            return AudioService.this;
-        }
-    }
 
 }
