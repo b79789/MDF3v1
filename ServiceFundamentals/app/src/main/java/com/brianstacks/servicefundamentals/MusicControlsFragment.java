@@ -67,7 +67,7 @@ public class MusicControlsFragment extends Fragment {
             AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
             //get service
             audioSrv = binder.getService();
-            mBound = true; 
+            mBound = true;
 
         }
 
@@ -98,10 +98,6 @@ public class MusicControlsFragment extends Fragment {
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
         mResultView = (TextView)getActivity().findViewById(R.id.trackText);
-
-
-
-
         //tv = (TextView) getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button) getActivity().findViewById(R.id.pauseButton);
         Button playButton = (Button) getActivity().findViewById(R.id.playButton);
@@ -113,15 +109,14 @@ public class MusicControlsFragment extends Fragment {
         ToggleButton randomButton = (ToggleButton) getActivity().findViewById(R.id.randButton);
         LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(mMessageReceiver,
                 new IntentFilter("com.android.activity.SEND_DATA"));
-        final String uri1 = "android.resource://" + getActivity().getPackageName() + "/" + R.raw.herstrut;
-        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-        metaRetriever.setDataSource(this.getActivity(), Uri.parse(uri1));
-        String artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         //tv.setText("Artist :" + artist + System.getProperty("line.separator") + "Title: " + title);
         //tv.setAllCaps(true);
         //tv.setTextColor(Color.GREEN);
         //tv.setTypeface(null, Typeface.BOLD);
+        final Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
+        objIntent.putExtra(EXTRA_RECEIVER, new DataReceiver());
+        getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
+        getActivity().getApplicationContext().startService(objIntent);
         loopButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             //Boolean loopGoing = audioSrv.mPlayer.isLooping();
             @Override
@@ -161,19 +156,14 @@ public class MusicControlsFragment extends Fragment {
         });
         playButton.setOnClickListener(new View.OnClickListener() {
             // created an intent object that goes to the audio service class
-            Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
 
-            //Intent backGround = new Intent(getActivity().getApplicationContext(), AudioService.class);
+            Intent backGround = new Intent(getActivity().getApplicationContext(), AudioService.class);
 
             @Override
             public void onClick(View v) {
-                if (audioSrv == null) {
-                    // mContext is defined upper in code, I think it is not necessary to explain what is it
-                    objIntent.putExtra(EXTRA_RECEIVER, new DataReceiver());
-
-                    getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
+                if (audioSrv.mPlayer == null) {
                     getActivity().getApplicationContext().startService(objIntent);
-
+                    audioSrv.onPlay();
                 } else {
                     audioSrv.onPlay();
                 }
@@ -239,6 +229,13 @@ public class MusicControlsFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
+        getActivity().getApplicationContext().unbindService( mConnection);
+
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
         getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
 
     }
@@ -290,6 +287,7 @@ public class MusicControlsFragment extends Fragment {
 
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
+
             if(resultData != null && resultData.containsKey(DATA_RETURNED)) {
                 mResultView.setText(resultData.getString(DATA_RETURNED, ""));
             }

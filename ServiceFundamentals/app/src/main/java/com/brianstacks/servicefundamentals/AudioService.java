@@ -30,7 +30,7 @@ import java.io.IOException;
 
 
 // created audio service that implements media player listeners
-public class AudioService extends IntentService implements  MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
+public class AudioService extends Service implements  MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
     private static final String LOGCAT = null;
     int id;
     MediaPlayer mPlayer;
@@ -41,31 +41,16 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
     AudioService audioService;
     private int currentTrack = 0;
 
-
-    public AudioService() {
-        super("Audio Service");
-    }
-
     @Override
     public IBinder onBind(Intent objIndent) {
         return new AudioServiceBinder();
+
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-
-        if(intent.hasExtra(MusicControlsFragment.EXTRA_RECEIVER)) {
-            ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
-            Bundle result = new Bundle();
-            result.putString(MusicControlsFragment.DATA_RETURNED,"Testing Background intentService" );
-            receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
-
-        }
-    }
 
     @Override
     public boolean onUnbind(Intent intent) {
-
+        Log.v("Unbind","Hits1");
         return false;
     }
 
@@ -111,6 +96,7 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
     public void onDestroy() {
         super.onDestroy();
 
+        Log.v("onDestroy","Hits1");
         mPlayer.release();
         stopForeground(true);
     }
@@ -118,35 +104,14 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(final Intent intent, int flags, int startId) {
 
-        mPlayer = new MediaPlayer();
-        if (intent != null) {
-            final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
-            final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
-            final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
-            final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
-            final String[] tracks = {uri1, uri2, uri3, uri4};
-            Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
-            Song song1 = new Song();
-            song1.setmArtist("Bob Seger and the Silver Bullet Band");
-            song1.setmTitle("Her Strut");
-            song1.setmUri(uri1);
-            song1.setmArt(imageIDs[0]);
-            Song song2 = new Song();
-            song2.setmArtist("Bob Seger and the Silver Bullet Band");
-            song2.setmTitle("Turn the Page");
-            song2.setmUri(uri2);
-            song2.setmArt(imageIDs[1]);
-            Song song3 = new Song();
-            song3.setmArtist("Bob Seger and the Silver Bullet Band");
-            song3.setmTitle("Old-Time Rock-N-Roll");
-            song3.setmUri(uri3);
-            song3.setmArt(imageIDs[2]);
-            Song song4 = new Song();
-            song4.setmArtist("Bob Seger and the Silver Bullet Band");
-            song4.setmTitle("Like a Rock");
-            song4.setmUri(uri4);
-            song4.setmArt(imageIDs[3]);
-            Log.v("Song1", song3.getmArtist() + " " + song3.getmTitle());
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String[] tracks = {uri1, uri2, uri3, uri4};
+        Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
+        if (mPlayer == null && intent != null) {
+            mPlayer = new MediaPlayer();
             try {
                 Uri file = Uri.parse(tracks[this.currentTrack]);
                 mPlayer.setDataSource(getApplication(), file);
@@ -157,12 +122,32 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if(intent.hasExtra(MusicControlsFragment.EXTRA_RECEIVER)) {
+                ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
+                Bundle result = new Bundle();
+                result.putString(MusicControlsFragment.DATA_RETURNED,artist +" "+title );
+                receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
+
+            }
+        }else {
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+
+            metaRetriever.setDataSource(getApplication().getApplicationContext(), Uri.parse(tracks[currentTrack+1]));
+            String artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
+            Bundle result = new Bundle();
+            result.putString(MusicControlsFragment.DATA_RETURNED,artist +" "+title );
+            receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
         }
+
+
         return START_STICKY;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+
         final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
         final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
         final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
@@ -210,6 +195,7 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
 
 
 
+
     public void onPause() {
         mPlayer.pause();
     }
@@ -223,8 +209,32 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
     }
 
     public void onSkipForward() {
-        mPlayer.stop();
-        mPlayer.start();
+        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
+        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
+        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
+        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
+        final String[] tracks = {uri1, uri2, uri3, uri4};
+        currentTrack = (currentTrack + 1) % tracks.length;
+        if (currentTrack>0){
+            Uri nextTrack = Uri.parse(tracks[currentTrack]);
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(), nextTrack);
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }else {
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(getApplicationContext(),Uri.parse(tracks[0]));
+                id = 2;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.prepareAsync();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -271,7 +281,6 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
         final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
         final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
         final String[] tracks = {uri1, uri2, uri3, uri4};
-        currentTrack = (currentTrack + 1) % tracks.length;
         if (currentTrack>0){
             mPlayer.reset();
             try {
