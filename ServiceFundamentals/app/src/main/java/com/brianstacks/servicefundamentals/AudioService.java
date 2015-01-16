@@ -1,6 +1,12 @@
 package com.brianstacks.servicefundamentals;
+/**
+ * Created by Brian Stacks
+ * on 1/5/15
+ * for FullSail.edu.
+ */
 
 import android.annotation.TargetApi;
+import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,22 +18,19 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
-import android.widget.RadioButton;
+import android.widget.Toast;
 
 import java.io.IOException;
 
-/**
- * Created by Brian Stacks
- * on 1/5/15
- * for FullSail.edu.
- */
+
 
 // created audio service that implements media player listeners
-public class AudioService extends Service implements  MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
+public class AudioService extends IntentService implements  MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
     private static final String LOGCAT = null;
     int id;
     MediaPlayer mPlayer;
@@ -39,9 +42,25 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
     private int currentTrack = 0;
 
 
+    public AudioService() {
+        super("AudioService");
+    }
+
     @Override
     public IBinder onBind(Intent objIndent) {
         return new AudioServiceBinder();
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+
+        if(intent.hasExtra(MusicControlsFragment.EXTRA_RECEIVER)) {
+            ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
+            Bundle result = new Bundle();
+            result.putString(MusicControlsFragment.DATA_RETURNED,"Testing Background intentService" );
+            receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
+
+        }
     }
 
     @Override
@@ -55,7 +74,6 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         Log.d(LOGCAT, "Service Started!");
         mManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        int notifyID = 1;
         final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
         final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
         final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
@@ -70,7 +88,6 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         mainIntent.setAction(Intent.ACTION_MAIN);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
-        //getApplicationContext().sendBroadcast(intent);
         int numMessages = 0;
         builder.setContentIntent(pendingIntent);
         builder.setSmallIcon(R.drawable.heavens_small);
@@ -277,7 +294,7 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
     }
 
     public void loopPlayTrue() {
-        
+
         mPlayer.setLooping(true);
 
     }
@@ -286,6 +303,7 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         mPlayer.setLooping(false);
 
     }
+
 
 
 }

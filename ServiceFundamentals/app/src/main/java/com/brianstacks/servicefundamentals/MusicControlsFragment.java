@@ -1,5 +1,9 @@
 package com.brianstacks.servicefundamentals;
-
+/**
+ Brian Stacks
+ Fullsail.edu
+ 1-11-15
+ */
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -14,7 +18,9 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,21 +31,22 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import java.io.IOException;
 
 
-/**
-    Brian Stacks
-    Fullsail.edu
-    1-11-15
- */
+
 public class MusicControlsFragment extends Fragment {
     public static final String TAG = "MusicControlsFragment.TAG";
     TextView tv;
     AudioService audioSrv;
     boolean mBound = false;
     private OnFragmentInteractionListener mListener;
+    public static final String EXTRA_RECEIVER = "MainActivity.EXTRA_RECEIVER";
+    public static final String DATA_RETURNED = "MainActivity.DATA_RETURNED";
+
+    public static final int RESULT_DATA_RETURNED = 0x0101010;
+
+    TextView mResultView;
 
 
     public static MusicControlsFragment newInstance() {
@@ -76,6 +83,7 @@ public class MusicControlsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         setRetainInstance(true);
     }
 
@@ -89,8 +97,12 @@ public class MusicControlsFragment extends Fragment {
     @Override
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
+        mResultView = (TextView)getActivity().findViewById(R.id.trackText);
 
-        tv = (TextView) getActivity().findViewById(R.id.trackText);
+
+
+
+        //tv = (TextView) getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button) getActivity().findViewById(R.id.pauseButton);
         Button playButton = (Button) getActivity().findViewById(R.id.playButton);
         Button stopButton = (Button) getActivity().findViewById(R.id.stopButton);
@@ -106,10 +118,10 @@ public class MusicControlsFragment extends Fragment {
         metaRetriever.setDataSource(this.getActivity(), Uri.parse(uri1));
         String artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
         String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-        tv.setText("Artist :" + artist + System.getProperty("line.separator") + "Title: " + title);
-        tv.setAllCaps(true);
-        tv.setTextColor(Color.GREEN);
-        tv.setTypeface(null, Typeface.BOLD);
+        //tv.setText("Artist :" + artist + System.getProperty("line.separator") + "Title: " + title);
+        //tv.setAllCaps(true);
+        //tv.setTextColor(Color.GREEN);
+        //tv.setTypeface(null, Typeface.BOLD);
         loopButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             //Boolean loopGoing = audioSrv.mPlayer.isLooping();
             @Override
@@ -151,10 +163,14 @@ public class MusicControlsFragment extends Fragment {
             // created an intent object that goes to the audio service class
             Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
 
+            //Intent backGround = new Intent(getActivity().getApplicationContext(), AudioService.class);
+
             @Override
             public void onClick(View v) {
                 if (audioSrv == null) {
                     // mContext is defined upper in code, I think it is not necessary to explain what is it
+                    objIntent.putExtra(EXTRA_RECEIVER, new DataReceiver());
+
                     getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
                     getActivity().getApplicationContext().startService(objIntent);
 
@@ -265,4 +281,18 @@ public class MusicControlsFragment extends Fragment {
 
     }
 
+    private final Handler mHandler = new Handler();
+
+    public class DataReceiver extends ResultReceiver {
+        public DataReceiver() {
+            super(mHandler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            if(resultData != null && resultData.containsKey(DATA_RETURNED)) {
+                mResultView.setText(resultData.getString(DATA_RETURNED, ""));
+            }
+        }
+    }
 }
