@@ -67,7 +67,7 @@ public class MusicControlsFragment extends Fragment {
         @Override
         public void onServiceDisconnected(ComponentName name) {
 
-            audioSrv = null;
+
             mBound = false;
         }
     };
@@ -89,6 +89,7 @@ public class MusicControlsFragment extends Fragment {
     @Override
     public void onActivityCreated(final Bundle _savedInstanceState) {
         super.onActivityCreated(_savedInstanceState);
+
         tv = (TextView) getActivity().findViewById(R.id.trackText);
         Button pauseButton = (Button) getActivity().findViewById(R.id.pauseButton);
         Button playButton = (Button) getActivity().findViewById(R.id.playButton);
@@ -153,7 +154,6 @@ public class MusicControlsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (audioSrv == null) {
-
                     // mContext is defined upper in code, I think it is not necessary to explain what is it
                     getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);
                     getActivity().getApplicationContext().startService(objIntent);
@@ -223,7 +223,7 @@ public class MusicControlsFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        //getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
+        getActivity().getApplicationContext().bindService(getActivity().getIntent(), mConnection, Context.BIND_AUTO_CREATE);
 
     }
 
