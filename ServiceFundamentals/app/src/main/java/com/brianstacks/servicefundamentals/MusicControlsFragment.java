@@ -67,7 +67,7 @@ public class MusicControlsFragment extends Fragment {
             AudioService.AudioServiceBinder binder = (AudioService.AudioServiceBinder) service;
             //get service
             audioSrv = binder.getService();
-            mBound = true;
+            mBound = true; 
 
         }
 

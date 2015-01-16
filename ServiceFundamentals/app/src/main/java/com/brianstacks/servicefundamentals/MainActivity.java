@@ -30,7 +30,7 @@ public class MainActivity extends ActionBarActivity implements MusicControlsFrag
         MusicControlsFragment musicControlsFragment = (MusicControlsFragment) mgr.findFragmentByTag(MusicControlsFragment.TAG);
         FragmentTransaction trans = mgr.beginTransaction();
         if (musicControlsFragment == null){
-            MusicControlsFragment fragment = new MusicControlsFragment();
+            MusicControlsFragment fragment = MusicControlsFragment.newInstance();
             trans.add(R.id.fragment_container, fragment);
             trans.commit();
         }

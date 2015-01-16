@@ -43,7 +43,7 @@ public class AudioService extends IntentService implements  MediaPlayer.OnErrorL
 
 
     public AudioService() {
-        super("AudioService");
+        super("Audio Service");
     }
 
     @Override
