@@ -37,15 +37,12 @@ import java.io.IOException;
 
 public class MusicControlsFragment extends Fragment {
     public static final String TAG = "MusicControlsFragment.TAG";
-    TextView tv;
     AudioService audioSrv;
     boolean mBound = false;
     private OnFragmentInteractionListener mListener;
     public static final String EXTRA_RECEIVER = "MainActivity.EXTRA_RECEIVER";
     public static final String DATA_RETURNED = "MainActivity.DATA_RETURNED";
-
     public static final int RESULT_DATA_RETURNED = 0x0101010;
-
     TextView mResultView;
 
 
@@ -83,8 +80,6 @@ public class MusicControlsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        setRetainInstance(true);
     }
 
     @Override
@@ -107,12 +102,6 @@ public class MusicControlsFragment extends Fragment {
         Button exitButton = (Button) getActivity().findViewById(R.id.exitApp);
         final ToggleButton loopButton = (ToggleButton) getActivity().findViewById(R.id.loopButton);
         ToggleButton randomButton = (ToggleButton) getActivity().findViewById(R.id.randButton);
-        LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(mMessageReceiver,
-                new IntentFilter("com.android.activity.SEND_DATA"));
-        //tv.setText("Artist :" + artist + System.getProperty("line.separator") + "Title: " + title);
-        //tv.setAllCaps(true);
-        //tv.setTextColor(Color.GREEN);
-        //tv.setTypeface(null, Typeface.BOLD);
         final Intent objIntent = new Intent(getActivity().getApplicationContext(), AudioService.class);
         objIntent.putExtra(EXTRA_RECEIVER, new DataReceiver());
         getActivity().getApplicationContext().bindService(objIntent, mConnection, Context.BIND_AUTO_CREATE);

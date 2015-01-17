@@ -39,7 +39,7 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
     String artist;
     NotificationManager mManager;
     AudioService audioService;
-    private int currentTrack = 0;
+    private int currentTrack;
 
     @Override
     public IBinder onBind(Intent objIndent) {
@@ -59,37 +59,7 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         Log.d(LOGCAT, "Service Started!");
         mManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
-        final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
-        final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
-        final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
-        final String[] tracks = {uri1, uri2, uri3, uri4};
-        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-        //metaRetriever.setDataSource(uri1);
-        String artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        Intent mainIntent = new Intent(this, MainActivity.class);
-        mainIntent.setAction(Intent.ACTION_MAIN);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
-        int numMessages = 0;
-        builder.setContentIntent(pendingIntent);
-        builder.setSmallIcon(R.drawable.heavens_small);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.heavens));
-        builder.setContentTitle(artist);
-        builder.setContentText(title);
-        builder.setNumber(++numMessages);
-        NotificationCompat.BigPictureStyle bigStyle = new NotificationCompat.BigPictureStyle();
-        bigStyle.setSummaryText("This expanded notification is brought to you by StacksMobile");
-        bigStyle.setBigContentTitle(artist);
-        bigStyle.setSummaryText(title);
-        Bitmap bigPic = BitmapFactory.decodeResource(getResources(), R.drawable.bs);
-        bigStyle.bigPicture(bigPic);
-        builder.setStyle(bigStyle);
-        builder.setAutoCancel(false);
-        builder.setOngoing(true);
-        startForeground(NOTIFICATION_ID, builder.build());
+
     }
 
     @Override
@@ -104,12 +74,18 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(final Intent intent, int flags, int startId) {
 
+        ++currentTrack;
         final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
         final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
         final String uri3 = "android.resource://" + getPackageName() + "/" + R.raw.oldtime;
         final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
         final String[] tracks = {uri1, uri2, uri3, uri4};
-        Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
+
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+        metaRetriever.setDataSource(getApplicationContext(),Uri.parse(tracks[1]));
+        artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         if (mPlayer == null && intent != null) {
             mPlayer = new MediaPlayer();
             try {
@@ -119,34 +95,49 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 id = 1;
                 mPlayer.setOnPreparedListener(this);
                 mPlayer.setOnCompletionListener(this);
+
+                if(intent.hasExtra(MusicControlsFragment.EXTRA_RECEIVER)) {
+                    ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
+                    Bundle result = new Bundle();
+                    result.putString(MusicControlsFragment.DATA_RETURNED,artist +" "+title );
+                    receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
+                    Intent mainIntent = new Intent(this, MainActivity.class);
+                    mainIntent.setAction(Intent.ACTION_MAIN);
+                    mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
+                    builder.setContentIntent(pendingIntent);
+                    builder.setSmallIcon(R.drawable.heavens_small);
+                    builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.heavens));
+                    builder.setContentTitle(artist);
+                    builder.setContentText(title);
+                    builder.setNumber(currentTrack);
+                    NotificationCompat.BigPictureStyle bigStyle = new NotificationCompat.BigPictureStyle();
+                    bigStyle.setSummaryText("This expanded notification is brought to you by StacksMobile");
+                    bigStyle.setBigContentTitle(artist);
+                    bigStyle.setSummaryText(title);
+                    Bitmap bigPic = BitmapFactory.decodeResource(getResources(), R.drawable.bs);
+                    bigStyle.bigPicture(bigPic);
+                    builder.setStyle(bigStyle);
+                    builder.setAutoCancel(false);
+                    builder.setOngoing(true);
+                    startForeground(NOTIFICATION_ID, builder.build());
+                    Integer[] imageIDs = {R.drawable.likearock, R.drawable.oldtimerock, R.drawable.bs, R.drawable.bs4};
+                    mManager.notify(NOTIFICATION_ID, builder.build());
+                    builder.setContentTitle(artist);
+                    mManager.notify(NOTIFICATION_ID, builder.build());
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(intent.hasExtra(MusicControlsFragment.EXTRA_RECEIVER)) {
-                ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
-                Bundle result = new Bundle();
-                result.putString(MusicControlsFragment.DATA_RETURNED,artist +" "+title );
-                receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
 
-            }
-        }else {
-            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-
-            metaRetriever.setDataSource(getApplication().getApplicationContext(), Uri.parse(tracks[currentTrack+1]));
-            String artist = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            String title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            ResultReceiver receiver = (ResultReceiver)intent.getParcelableExtra(MusicControlsFragment.EXTRA_RECEIVER);
-            Bundle result = new Bundle();
-            result.putString(MusicControlsFragment.DATA_RETURNED,artist +" "+title );
-            receiver.send(MusicControlsFragment.RESULT_DATA_RETURNED, result);
         }
-
-
         return START_STICKY;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+
 
         final String uri1 = "android.resource://" + getPackageName() + "/" + R.raw.herstrut;
         final String uri2 = "android.resource://" + getPackageName() + "/" + R.raw.turnthepage;
@@ -164,6 +155,12 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 e.printStackTrace();
             }
             mp.prepareAsync();
+
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(getApplicationContext(),nextTrack);
+            artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         }else {
             mPlayer.reset();
             try {
@@ -173,6 +170,11 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 e.printStackTrace();
             }
             mPlayer.prepareAsync();
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(getApplicationContext(),Uri.parse(tracks[0]));
+            artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         }
     }
 
@@ -215,8 +217,9 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
         final String[] tracks = {uri1, uri2, uri3, uri4};
         currentTrack = (currentTrack + 1) % tracks.length;
+        Uri nextTrack = Uri.parse(tracks[currentTrack]);
         if (currentTrack>0){
-            Uri nextTrack = Uri.parse(tracks[currentTrack]);
+
             mPlayer.reset();
             try {
                 mPlayer.setDataSource(getApplicationContext(), nextTrack);
@@ -225,6 +228,12 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 e.printStackTrace();
             }
             mPlayer.prepareAsync();
+
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(getApplicationContext(),nextTrack);
+            artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         }else {
             mPlayer.reset();
             try {
@@ -234,6 +243,12 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 e.printStackTrace();
             }
             mPlayer.prepareAsync();
+
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(getApplicationContext(),nextTrack);
+            artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         }
     }
 
@@ -246,6 +261,7 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
         final String uri4 = "android.resource://" + getPackageName() + "/" + R.raw.likearock;
         final String[] tracks = {uri1, uri2, uri3, uri4};
         currentTrack = (currentTrack - 1) % tracks.length;
+
         if (currentTrack>0){
             Uri nextTrack = Uri.parse(tracks[currentTrack]);
             mPlayer.reset();
@@ -256,6 +272,12 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
                 e.printStackTrace();
             }
             mPlayer.prepareAsync();
+
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(getApplicationContext(),nextTrack);
+            artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
         }else {
             mPlayer.reset();
             try {
@@ -264,7 +286,17 @@ public class AudioService extends Service implements  MediaPlayer.OnErrorListene
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mPlayer.prepareAsync();
+            if (currentTrack>0){
+                mPlayer.prepareAsync();
+                Uri nextTrack = Uri.parse(tracks[currentTrack]);
+
+                MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+                metaRetriever.setDataSource(getApplicationContext(),nextTrack);
+                artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                title = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
+            }
+
         }
 
     }
