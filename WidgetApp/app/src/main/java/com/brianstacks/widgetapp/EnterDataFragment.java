@@ -80,8 +80,6 @@ public class EnterDataFragment extends Fragment {
                     enteredData.setName(e1.getText().toString());
                     enteredData.setAge(e2.getText().toString());
                     mListener.onFragmentInteraction2(enteredData);
-                    Toast.makeText(getActivity(),"Hit",Toast.LENGTH_SHORT).show();
-
                 }
             }
         });
