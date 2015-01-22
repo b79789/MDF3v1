@@ -12,11 +12,13 @@ public class EnteredData implements Serializable {
     private static final long serialVersionUID = 8733333333330552888L;
     private String mName;
     private String mAge;
+    private String mEyeColor;
 
 
     public EnteredData(){
         mName="";
         mAge="";
+        mEyeColor="";
     }
 
     public String getName() {
@@ -31,6 +33,11 @@ public class EnteredData implements Serializable {
     public void  setAge(String age) {
         mAge= age;
     }
-
+    public String getEyeColor() {
+        return mEyeColor;
+    }
+    public void setEyeColor(String eye) {
+        mEyeColor = eye;
+    }
 
 }

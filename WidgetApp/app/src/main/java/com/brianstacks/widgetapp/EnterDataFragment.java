@@ -2,12 +2,18 @@ package com.brianstacks.widgetapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -37,6 +43,7 @@ public class EnterDataFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_enter_data, container, false);
     }
@@ -52,7 +59,8 @@ public class EnterDataFragment extends Fragment {
                 EnteredData enteredData = new EnteredData();
                 EditText e1 = (EditText)getActivity().findViewById(R.id.e1);
                 EditText e2 = (EditText)getActivity().findViewById(R.id.e2);
-
+                EditText e3 = (EditText)getActivity().findViewById(R.id.e3);
+                e1.requestFocus();
                 if (e1.getText().toString().equals("")){
                     AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
                     builder1.setMessage("Must enter name");
@@ -75,10 +83,25 @@ public class EnterDataFragment extends Fragment {
                             });
                     AlertDialog alert11 = builder1.create();
                     alert11.show();
+                }else if (e3.getText().toString().equals("")) {
+                    AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
+                    builder1.setMessage("Must enter eye color");
+                    builder1.setPositiveButton("Exit",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    dialog.cancel();
+                                }
+                            });
+                    AlertDialog alert11 = builder1.create();
+                    alert11.show();
                 }else {
+
+                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(getActivity().INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(e1, InputMethodManager.SHOW_IMPLICIT);
 
                     enteredData.setName(e1.getText().toString());
                     enteredData.setAge(e2.getText().toString());
+                    enteredData.setEyeColor(e3.getText().toString());
                     mListener.onFragmentInteraction2(enteredData);
                 }
             }
@@ -95,6 +118,7 @@ public class EnterDataFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
     }
+
 
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction2(EnteredData enteredData);

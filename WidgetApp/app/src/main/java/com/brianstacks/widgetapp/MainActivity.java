@@ -3,9 +3,13 @@ package com.brianstacks.widgetapp;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Base64InputStream;
@@ -26,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -38,24 +43,118 @@ import java.util.List;
 public class MainActivity extends Activity implements EnterDataFragment.OnFragmentInteractionListener{
 
     ArrayList<EnteredData> enteredDataArrayList;
-    public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String fileName = "enteredData";
+    // Assuming we're in an activity.
+    public static final String ACTION_CUSTOM = "com.brianstacks.android.ACTION_CUSTOM";
+    CustomReceiver mReceiver;
+    FragmentManager mgr = getFragmentManager();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Helper helper = new Helper(this);
-        String jsonString = helper.readFromFile(this,"enteredData");
+
+        if (fileExists(this, fileName)){
+            FileInputStream fis = null;
+            try {
+                fis = this.openFileInput(fileName);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            ObjectInputStream is = null;
+            try {
+                is = new ObjectInputStream(fis);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            ArrayList<EnteredData> simpleClass = null;
+            try {
+                simpleClass = (ArrayList<EnteredData>) is.readObject();
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            enteredDataArrayList = simpleClass;
+            if (simpleClass != null) {
+                Log.v("arraySize", String.valueOf(simpleClass.size()));
+            }
+            getIntent().putExtra("enteredDataArrayList", enteredDataArrayList);
+            FragmentTransaction trans = mgr.beginTransaction();
+            MyListFragment listFrag =  MyListFragment.newInstance("","","");
+            trans.replace(R.id.fragment_container, listFrag, MyListFragment.TAG);
+            trans.commit();
 
 
+            Intent broadcast = new Intent(ACTION_CUSTOM);
+            sendBroadcast(broadcast);
+
+        }else {
             enteredDataArrayList = new ArrayList<>();
             getIntent().putExtra("enteredDataArrayList", enteredDataArrayList);
-            FragmentManager mgr = getFragmentManager();
             FragmentTransaction trans = mgr.beginTransaction();
             MyListFragment listFrag =  new MyListFragment();
             trans.replace(R.id.fragment_container, listFrag, MyListFragment.TAG);
             trans.commit();
+        }
+
+
+
     }
 
+    public static void widgetAdd(){
+    }
+
+    public class CustomReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Intent handled here.
+            Log.i("TAG", "Intent recieved: " + intent.getAction());
+
+            if (intent.getAction() == ACTION_CUSTOM) {
+                Bundle bundle = intent.getExtras();
+                if (bundle != null) {
+                    Toast.makeText(getApplicationContext(),"Worked from activity",Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mReceiver = new CustomReceiver();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_CUSTOM);
+        registerReceiver(mReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        unregisterReceiver(mReceiver);
+    }
+
+    public boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        return !(file == null || !file.exists());
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -80,8 +179,8 @@ public class MainActivity extends Activity implements EnterDataFragment.OnFragme
     }
 
 
-    public void addDetailsClick(View v) {
-        FragmentManager mgr = getFragmentManager();
+    public  void addDetailsClick(View v) {
+
         FragmentTransaction trans = mgr.beginTransaction();
         EnterDataFragment enterDataFragment = EnterDataFragment.newInstance();
         trans.replace(R.id.fragment_container, enterDataFragment, EnterDataFragment.TAG);
@@ -92,39 +191,45 @@ public class MainActivity extends Activity implements EnterDataFragment.OnFragme
     @Override
     public void onFragmentInteraction2(EnteredData enteredData) {
 
-
-        Helper helper = new Helper(this);
-        MyListFragment listFrag = (MyListFragment) getFragmentManager().findFragmentByTag(MyListFragment.TAG);
-        for (int i=0;i<enteredDataArrayList.size();i++){
-            // Creating root JSONObject
-            JSONObject json = new JSONObject();
-            // Creating a JSONArray
-            JSONArray jsonArray = new JSONArray();
-            //Creating the element to populate the array
-            JSONObject element = new JSONObject();
-            try {
-                element.put("name",enteredData.getName());
-                element.put("age",enteredData.getAge());
-                // Put it in the array
-                jsonArray.put(element);
-                // Put the array in the root JSONObject
-                json.put("enteredData", jsonArray);
-                // Get the JSON String
-                String s = json.toString();
-                // Get formatted and indented JSON String
-                String s2 = json.toString(4);
-                // 4 is the number of spaces to indent the string
-                Log.v("listArray",s2);
-                helper.writeToFile(this, "enteredData", s2);
-            } catch (JSONException e) {
-                e.printStackTrace();
+        FileOutputStream fos = null;
+        try {
+            fos = this.openFileOutput("enteredData", Context.MODE_PRIVATE);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        ObjectOutputStream os = null;
+        try {
+            os = new ObjectOutputStream(fos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (os != null) {
+                os.writeObject(enteredDataArrayList);
             }
-
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (os != null) {
+                os.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (fos != null) {
+                fos.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
+
+        MyListFragment listFrag = (MyListFragment) getFragmentManager().findFragmentByTag(MyListFragment.TAG);
         if (listFrag == null) {
 
-            listFrag = MyListFragment.newInstance(enteredData.getName(), enteredData.getAge());
+            listFrag = MyListFragment.newInstance(enteredData.getName(), enteredData.getAge(),enteredData.getEyeColor());
             getFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, listFrag, MyListFragment.TAG)
                     .commit();

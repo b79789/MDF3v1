@@ -49,6 +49,8 @@ public class DataAdapter extends BaseAdapter {
         TextView tv = (TextView) view.findViewById(R.id.textView1);
         tv.setText(enteredData.getName());
 
+        TextView tv2 = (TextView) view.findViewById(R.id.textView2);
+        tv2.setText(enteredData.getAge());
         return  view;
     }
 }
