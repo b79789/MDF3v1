@@ -21,6 +21,10 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.brianstacks.widgetapp.CollectionWidget.CollectionWidgetFactory;
+import com.brianstacks.widgetapp.CollectionWidget.CollectionWidgetProvider;
+import com.brianstacks.widgetapp.CollectionWidget.CollectionWidgetService;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -125,6 +129,7 @@ public class MainActivity extends Activity implements EnterDataFragment.OnFragme
             if (intent.getAction() == ACTION_CUSTOM) {
                 Bundle bundle = intent.getExtras();
                 if (bundle != null) {
+
                     Toast.makeText(getApplicationContext(),"Worked from activity",Toast.LENGTH_SHORT).show();
 
                 }

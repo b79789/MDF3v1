@@ -98,7 +98,6 @@ public class MyListFragment extends Fragment {
                     EnteredData enteredData1 = (EnteredData)parent.getItemAtPosition(position);
                     Intent intent = new Intent(getActivity(), DetailsViewActivity.class);;
                     intent.putExtra("name",enteredData1);
-                    Toast.makeText(getActivity(),enteredData1.getEyeColor(),Toast.LENGTH_SHORT).show();
                     startActivity(intent);
                     deletePos =position;
                     parent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
