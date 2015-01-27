@@ -26,7 +26,6 @@ import java.util.ArrayList;
 
 public class InfoViewFragment extends Fragment {
     public static final String TAG = "InfoViewFragment.TAG";
-    public static final String fileName = "enteredData";
 
     private static final String Arg_Data="data";
 
@@ -60,45 +59,6 @@ public class InfoViewFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstance) {
         super.onActivityCreated(savedInstance);
-        if (fileExists(getActivity(), fileName)){
-            FileInputStream fis = null;
-            try {
-                fis = getActivity().openFileInput(fileName);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            ObjectInputStream is = null;
-            try {
-                is = new ObjectInputStream(fis);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            EnteredData simpleClass = null;
-            try {
-                simpleClass = (EnteredData) is.readObject();
-            } catch (ClassNotFoundException | IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            enteredData = simpleClass;
-            if (simpleClass != null) {
-                Log.v("enteredData", enteredData.getName());
-            }
-
-
-        }
-
         enteredData = (EnteredData)getActivity().getIntent().getSerializableExtra("enteredData");
 
         Log.v("enteredData uri", String.valueOf(enteredData.getPic()));
@@ -111,10 +71,7 @@ public class InfoViewFragment extends Fragment {
         iv1.setImageBitmap(BitmapFactory.decodeFile(enteredData.getPic()));
     }
 
-    public boolean fileExists(Context context, String filename) {
-        File file = context.getFileStreamPath(filename);
-        return !(file == null || !file.exists());
-    }
+
 
     @Override
     public void onAttach(Activity activity) {

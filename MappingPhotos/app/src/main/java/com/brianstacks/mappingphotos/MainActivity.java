@@ -12,9 +12,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
@@ -25,52 +28,130 @@ public class MainActivity extends FragmentActivity implements EnterDataFragment.
     Button viewButton;
     Button mapButton;
     ArrayList<EnteredData> myArrayList;
+    public static final String fileName = "enteredData";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final MainMapFragment frag = new MainMapFragment();
-        getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
-        addButton =(Button)findViewById(R.id.get_my_location_button);
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-                FragmentTransaction trans = getFragmentManager().beginTransaction();
-                EnterDataFragment enterDataFragment = EnterDataFragment.newInstance();
-                trans.replace(R.id.layout_container, enterDataFragment, EnterDataFragment.TAG);
-                trans.commit();
-
+        if (fileExists(this, fileName)){
+            FileInputStream fis = null;
+            try {
+                fis = openFileInput(fileName);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
-        });
-
-        viewButton = (Button)findViewById(R.id.showInfo);
-        viewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                InfoViewFragment infoViewFragment = InfoViewFragment.newInstance();
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.layout_container, infoViewFragment, InfoViewFragment.TAG)
-                        .commit();
+            ObjectInputStream is = null;
+            try {
+                is = new ObjectInputStream(fis);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        });
-
-        mapButton=(Button)findViewById(R.id.showMap);
-        mapButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+            ArrayList<EnteredData> simpleClass = null;
+            try {
+                simpleClass = (ArrayList<EnteredData>) is.readObject();
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
             }
-        });
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            myArrayList = simpleClass;
+            if (simpleClass != null) {
+                myArrayList.get(0);
+            }
+
+            final MainMapFragment frag = new MainMapFragment();
+            getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+            addButton =(Button)findViewById(R.id.get_my_location_button);
+            addButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    FragmentTransaction trans = getFragmentManager().beginTransaction();
+                    EnterDataFragment enterDataFragment = EnterDataFragment.newInstance();
+                    trans.replace(R.id.layout_container, enterDataFragment, EnterDataFragment.TAG);
+                    trans.commit();
+
+                }
+            });
+
+            viewButton = (Button)findViewById(R.id.showInfo);
+            viewButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    InfoViewFragment infoViewFragment = InfoViewFragment.newInstance();
+                    getFragmentManager().beginTransaction()
+                            .replace(R.id.layout_container, infoViewFragment, InfoViewFragment.TAG)
+                            .commit();
+                }
+            });
+
+            mapButton=(Button)findViewById(R.id.showMap);
+            mapButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+                }
+            });
+
+
+
+        }else {
+            myArrayList=new ArrayList<EnteredData>();
+            final MainMapFragment frag = new MainMapFragment();
+            getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+            addButton =(Button)findViewById(R.id.get_my_location_button);
+            addButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    FragmentTransaction trans = getFragmentManager().beginTransaction();
+                    EnterDataFragment enterDataFragment = EnterDataFragment.newInstance();
+                    trans.replace(R.id.layout_container, enterDataFragment, EnterDataFragment.TAG);
+                    trans.commit();
+
+                }
+            });
+
+            viewButton = (Button)findViewById(R.id.showInfo);
+            viewButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    InfoViewFragment infoViewFragment = InfoViewFragment.newInstance();
+                    getFragmentManager().beginTransaction()
+                            .replace(R.id.layout_container, infoViewFragment, InfoViewFragment.TAG)
+                            .commit();
+                }
+            });
+
+            mapButton=(Button)findViewById(R.id.showMap);
+            mapButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+                }
+            });
+
+
+        }
 
 
     }
 
     @Override
-    public void onFragmentInteraction(final EnteredData enteredData) {
-
-        getIntent().putExtra("enteredData",enteredData);
+    public void onDestroy(){
         FileOutputStream fos = null;
         try {
             fos = this.openFileOutput("enteredData", Context.MODE_PRIVATE);
@@ -85,7 +166,7 @@ public class MainActivity extends FragmentActivity implements EnterDataFragment.
         }
         try {
             if (os != null) {
-                os.writeObject(enteredData);
+                os.writeObject(myArrayList);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,11 +186,22 @@ public class MainActivity extends FragmentActivity implements EnterDataFragment.
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void onFragmentInteraction(final EnteredData enteredData) {
+
+        getIntent().putExtra("enteredData",enteredData);
+        myArrayList.add(enteredData);
+
         final MainMapFragment frag = new MainMapFragment();
         getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
 
 
     }
 
-
+    public boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        return !(file == null || !file.exists());
+    }
 }
