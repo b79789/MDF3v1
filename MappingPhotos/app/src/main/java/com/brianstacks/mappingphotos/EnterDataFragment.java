@@ -4,13 +4,19 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,21 +24,26 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-public class EnterDataFragment extends Fragment {
+public class EnterDataFragment extends Fragment implements LocationListener{
 
     public static final String TAG = "EnterDataFragment.TAG";
     private OnFragmentInteractionListener mListener;
     private static final int REQUEST_TAKE_PICTURE = 0x01001;
+    private static final int REQUEST_ENABLE_GPS = 0x02001;
+
+    LocationManager mManager;
     Uri mImageUri;
     ImageView mImageView;
     Button mButton;
     Button addButton;
+    EnteredData enteredData;
 
 
     public static EnterDataFragment newInstance() {
@@ -63,7 +74,12 @@ public class EnterDataFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstance){
         super.onActivityCreated(savedInstance);
         Button addButton;
-        final EnteredData enteredData = new EnteredData();
+        if (enteredData == null){
+            enteredData = new EnteredData();
+        }else {
+            enteredData= (EnteredData)getActivity().getIntent().getSerializableExtra("enteredData");
+        }
+        mManager = (LocationManager)getActivity().getSystemService(MainActivity.LOCATION_SERVICE);
         final EditText e1 = (EditText)getActivity().findViewById(R.id.e1);
         final EditText e2 = (EditText)getActivity().findViewById(R.id.e2);
         mButton = (Button)getActivity().findViewById(R.id.takePicButton);
@@ -127,7 +143,8 @@ public class EnterDataFragment extends Fragment {
 
                     enteredData.setName(e1.getText().toString());
                     enteredData.setAge(e2.getText().toString());
-                    enteredData.setPic(mImageUri);
+
+                    enableGps();
                     mListener.onFragmentInteraction(enteredData);
                 }
             }
@@ -140,6 +157,7 @@ public class EnterDataFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 
+        enableGps();
         if(requestCode == REQUEST_TAKE_PICTURE && resultCode != MainActivity.RESULT_CANCELED) {
             if(data == null) {
                 mImageView.setImageBitmap(BitmapFactory.decodeFile(mImageUri.getPath()));
@@ -148,10 +166,40 @@ public class EnterDataFragment extends Fragment {
                 mImageView.setImageBitmap((Bitmap)data.getParcelableExtra("data"));
                 addImageToGallery((Uri)data.getParcelableExtra("data"));
             }
+            enteredData.setPic(mImageUri.getPath());
         }
 
     }
 
+
+    private void enableGps() {
+        if(mManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            mManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
+
+            Location loc = mManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if(loc != null) {
+                enteredData.setLat(loc.getLatitude());
+                enteredData.setLon(loc.getLongitude());
+
+
+            }
+
+        } else {
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("GPS Unavailable")
+                    .setMessage("Please enable GPS in the system settings.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivityForResult(settingsIntent, REQUEST_ENABLE_GPS);
+                        }
+
+                    })
+                    .show();
+        }
+    }
     private Uri getOutputUri() {
         String imageName = new SimpleDateFormat("MMddyyyy_HHmmss")
                 .format(new Date(System.currentTimeMillis()));
@@ -196,9 +244,43 @@ public class EnterDataFragment extends Fragment {
         addButton.setVisibility(View.VISIBLE);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        enableGps();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        mManager.removeUpdates(this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        enteredData.setLat(location.getLatitude());
+        enteredData.setLon(location.getLongitude());
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
 
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         public void onFragmentInteraction(EnteredData enteredData);
     }
 

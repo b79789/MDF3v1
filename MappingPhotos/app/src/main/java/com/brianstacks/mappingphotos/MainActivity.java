@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,12 +16,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 
 
 public class MainActivity extends FragmentActivity implements EnterDataFragment.OnFragmentInteractionListener{
 
     Button addButton;
     Button viewButton;
+    Button mapButton;
+    ArrayList<EnteredData> myArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +56,21 @@ public class MainActivity extends FragmentActivity implements EnterDataFragment.
             }
         });
 
+        mapButton=(Button)findViewById(R.id.showMap);
+        mapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
+            }
+        });
+
 
     }
 
     @Override
     public void onFragmentInteraction(final EnteredData enteredData) {
 
+        getIntent().putExtra("enteredData",enteredData);
         FileOutputStream fos = null;
         try {
             fos = this.openFileOutput("enteredData", Context.MODE_PRIVATE);
@@ -91,6 +104,7 @@ public class MainActivity extends FragmentActivity implements EnterDataFragment.
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         final MainMapFragment frag = new MainMapFragment();
         getFragmentManager().beginTransaction().replace(R.id.layout_container, frag).commit();
 
